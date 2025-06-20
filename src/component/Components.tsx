@@ -99,7 +99,7 @@ const generateSolvableGame = (): { buttons: Button[]; targetNumber: number } => 
   return { buttons: allButtons, targetNumber };
 };
 
-// --- Styled Components の定義 (変更なし) ---
+// --- Styled Components の定義 ---
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -112,6 +112,13 @@ const GlobalStyle = createGlobalStyle`
     min-height: 100vh;
     margin: 0;
     overflow: hidden;
+
+    @media (max-width: 768px) { // タブレット・スマートフォン向け
+      font-size: 14px; // 全体のベースフォントサイズを少し小さく
+    }
+    @media (max-width: 480px) { // スマートフォン向け
+      font-size: 12px;
+    }
   }
 `;
 
@@ -127,12 +134,16 @@ const GameContainer = styled.div`
   border: 2px solid #555;
   max-width: 600px;
   margin: auto;
-`;
 
-const Title = styled.h1`
-  color: #FFD700;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-  margin-bottom: 10px;
+  @media (max-width: 768px) {
+    padding: 15px;
+    gap: 15px;
+  }
+  @media (max-width: 480px) {
+    padding: 10px;
+    gap: 10px;
+    max-width: 95%; // スマートフォンで横幅いっぱいに広げる
+  }
 `;
 
 const TargetNumber = styled.p`
@@ -140,6 +151,13 @@ const TargetNumber = styled.p`
   font-weight: bold;
   color: #EEE;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+
+  @media (max-width: 768px) {
+    font-size: 1.6em;
+  }
+  @media (max-width: 480px) {
+    font-size: 1.4em;
+  }
 `;
 
 const ButtonGrid = styled.div`
@@ -160,6 +178,13 @@ const PyramidRow = styled.div`
 
   &:not(:first-child) {
     margin-top: -30px;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: -15px; // スマートフォン向けに余白を調整
+    &:not(:first-child) {
+      margin-top: -20px; // スマートフォン向けに余白を調整
+    }
   }
 `;
 

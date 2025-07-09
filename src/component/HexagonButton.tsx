@@ -33,7 +33,6 @@ const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
   font-size: 1.5em;
   font-weight: bold;
   color: #333;
-  border: ${props => props.$isSelected ? '3px solid #FFF' : 'none'};
   cursor: pointer;
   transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
   box-shadow: 

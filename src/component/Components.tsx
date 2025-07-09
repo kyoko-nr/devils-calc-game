@@ -6,8 +6,6 @@ import { ModeButton, ModeButtonContainer } from './ModeButton';
 import { calculate, generateNumber } from './logics';
 import { MODE_CONFIG, type GameMode } from './consts';
 
-
-
 // 正解が必ず存在するボタンとターゲットナンバーを生成する関数
 const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber: number } => {
   let solvableButtons: Button[] = [];
@@ -17,9 +15,10 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
   while (solvableButtons.length < 3 && attempts < 1000) {
     attempts++;
 
-    const valIsTwoDigit1 = Math.random() < 0.5;
-    const valIsTwoDigit2 = Math.random() < 0.5;
-    const valIsTwoDigit3 = Math.random() < 0.5;
+    // easyモードでは1桁の数字のみを使用
+    const valIsTwoDigit1 = mode !== 'easy' && Math.random() < 0.5;
+    const valIsTwoDigit2 = mode !== 'easy' && Math.random() < 0.5;
+    const valIsTwoDigit3 = mode !== 'easy' && Math.random() < 0.5;
 
     const value1 = generateNumber(valIsTwoDigit1);
     const value2 = generateNumber(valIsTwoDigit2);
@@ -51,14 +50,20 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
 
   for (let i = 3; i < 10; i++) {
     let value: number;
-    const needsTwoDigit = 5 - currentTwoDigitCount;
-    const remainingSlots = 10 - i;
-
-    if (needsTwoDigit > 0 && Math.random() < (needsTwoDigit / remainingSlots)) {
-        value = generateNumber(true);
-        currentTwoDigitCount++;
+    
+    if (mode === 'easy') {
+      // easyモードでは1桁の数字のみを使用
+      value = generateNumber(false);
     } else {
-        value = generateNumber(false);
+      const needsTwoDigit = 5 - currentTwoDigitCount;
+      const remainingSlots = 10 - i;
+
+      if (needsTwoDigit > 0 && Math.random() < (needsTwoDigit / remainingSlots)) {
+          value = generateNumber(true);
+          currentTwoDigitCount++;
+      } else {
+          value = generateNumber(false);
+      }
     }
 
     const availableOperators = MODE_CONFIG[mode].operators;

@@ -15,10 +15,10 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
   while (solvableButtons.length < 3 && attempts < 1000) {
     attempts++;
 
-    // easyモードでは1桁の数字のみを使用
-    const valIsTwoDigit1 = mode !== 'easy' && Math.random() < 0.5;
-    const valIsTwoDigit2 = mode !== 'easy' && Math.random() < 0.5;
-    const valIsTwoDigit3 = mode !== 'easy' && Math.random() < 0.5;
+    // easy, normalモードでは1桁の数字のみを使用
+    const valIsTwoDigit1 = mode === 'hard' && Math.random() < 0.5;
+    const valIsTwoDigit2 = mode === 'hard' && Math.random() < 0.5;
+    const valIsTwoDigit3 = mode === 'hard' && Math.random() < 0.5;
 
     const value1 = generateNumber(valIsTwoDigit1);
     const value2 = generateNumber(valIsTwoDigit2);
@@ -51,8 +51,8 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
   for (let i = 3; i < 10; i++) {
     let value: number;
     
-    if (mode === 'easy') {
-      // easyモードでは1桁の数字のみを使用
+    if (mode === 'easy' || mode === 'normal') {
+      // easy, normalモードでは1桁の数字のみを使用
       value = generateNumber(false);
     } else {
       const needsTwoDigit = 5 - currentTwoDigitCount;

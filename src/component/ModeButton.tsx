@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-
-type GameMode = 'easy' | 'normal' | 'hard';
+import type { GameMode } from './consts';
 
 interface ModeButtonProps {
   mode: GameMode;
@@ -69,4 +68,3 @@ const ModeButton: React.FC<ModeButtonProps> = ({ mode, isActive, onClick }) => {
 };
 
 export { ModeButton, ModeButtonContainer };
-export type { GameMode };

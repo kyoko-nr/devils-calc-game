@@ -2,51 +2,11 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
 import { HexagonButton, type Button } from './HexagonButton';
-import { ModeButton, ModeButtonContainer, type GameMode } from './ModeButton';
+import { ModeButton, ModeButtonContainer } from './ModeButton';
+import { calculate, generateNumber } from './logics';
+import { MODE_CONFIG, type GameMode } from './consts';
 
 
-// モード別の設定
-const MODE_CONFIG = {
-  easy: {
-    targetMaxValue: 30,
-    operators: ['+', '-']
-  },
-  normal: {
-    targetMaxValue: 30,
-    operators: ['+', '-', '×', '÷']
-  },
-  hard: {
-    targetMaxValue: 200,
-    operators: ['+', '-', '×', '÷']
-  }
-};
-
-// 指定されたオペランドと演算子で計算するヘルパー関数
-const calculate = (num1: number, operator: string, num2: number): number | null => {
-  switch (operator) {
-    case '+':
-      return num1 + num2;
-    case '-':
-      return num1 - num2;
-    case '×':
-      return num1 * num2;
-    case '÷':
-      // 0での割り算、または割り切れない場合はnullを返す
-      if (num2 === 0 || num1 % num2 !== 0) return null;
-      return num1 / num2;
-    default:
-      return null;
-  }
-};
-
-// 1桁または2桁の数字を生成するヘルパー関数 (最大20まで)
-const generateNumber = (isTwoDigit: boolean): number => {
-  if (isTwoDigit) {
-    return Math.floor(Math.random() * 11) + 10; // 10〜20
-  } else {
-    return Math.floor(Math.random() * 9) + 1; // 1〜9
-  }
-};
 
 // 正解が必ず存在するボタンとターゲットナンバーを生成する関数
 const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber: number } => {

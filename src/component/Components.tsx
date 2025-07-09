@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
+import { HexagonButton, type Button } from './HexagonButton';
+import { ModeButton, ModeButtonContainer, type GameMode } from './ModeButton';
 
-// ボタンの型定義
-interface Button {
-  id: number;
-  value: number;
-  operator: string;
-}
 
 const operators = ['+', '-', '×', '÷'];
+
+// モード別の設定
+const MODE_CONFIG = {
+  easy: {
+    targetMaxValue: 30,
+    operators: ['+', '-']
+  },
+  normal: {
+    targetMaxValue: 30,
+    operators: ['+', '-', '×', '÷']
+  },
+  hard: {
+    targetMaxValue: 200,
+    operators: ['+', '-', '×', '÷']
+  }
+};
 
 // 指定されたオペランドと演算子で計算するヘルパー関数
 const calculate = (num1: number, operator: string, num2: number): number | null => {
@@ -39,7 +51,7 @@ const generateNumber = (isTwoDigit: boolean): number => {
 };
 
 // 正解が必ず存在するボタンとターゲットナンバーを生成する関数
-const generateSolvableGame = (): { buttons: Button[]; targetNumber: number } => {
+const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber: number } => {
   let solvableButtons: Button[] = [];
   let targetNumber = 0;
   let attempts = 0;
@@ -55,8 +67,9 @@ const generateSolvableGame = (): { buttons: Button[]; targetNumber: number } => 
     const value2 = generateNumber(valIsTwoDigit2);
     const value3 = generateNumber(valIsTwoDigit3);
 
-    const op1 = operators[Math.floor(Math.random() * operators.length)];
-    const op2 = operators[Math.floor(Math.random() * operators.length)];
+    const availableOperators = MODE_CONFIG[mode].operators;
+    const op1 = availableOperators[Math.floor(Math.random() * availableOperators.length)];
+    const op2 = availableOperators[Math.floor(Math.random() * availableOperators.length)];
 
     let result: number | null = null;
     const firstCalcResult = calculate(value1, op1, value2);
@@ -65,7 +78,7 @@ const generateSolvableGame = (): { buttons: Button[]; targetNumber: number } => 
       result = calculate(firstCalcResult, op2, value3);
     }
 
-    if (result !== null && Number.isInteger(result) && result > 0 && result < 200) {
+    if (result !== null && Number.isInteger(result) && result > 0 && result < MODE_CONFIG[mode].targetMaxValue) {
       solvableButtons = [
         { id: 0, value: value1, operator: '+' },
         { id: 1, value: value2, operator: op1 },
@@ -90,7 +103,8 @@ const generateSolvableGame = (): { buttons: Button[]; targetNumber: number } => 
         value = generateNumber(false);
     }
 
-    const operator = operators[Math.floor(Math.random() * operators.length)];
+    const availableOperators = MODE_CONFIG[mode].operators;
+    const operator = availableOperators[Math.floor(Math.random() * availableOperators.length)];
     remainingButtons.push({ id: i, value, operator });
   }
 
@@ -164,88 +178,53 @@ const ButtonGrid = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  gap: 28px;
 `;
 
 const PyramidRow = styled.div`
   display: flex;
   justify-content: center;
   margin-bottom: -20px;
-  
-  &:not(:last-child) > button {
-    margin-right: 8px;
-  }
 
   &:not(:first-child) {
     margin-top: -30px;
   }
-
-  @media (max-width: 480px) {
-    margin-bottom: -15px; // スマートフォン向けに余白を調整
-    &:not(:first-child) {
-      margin-top: -20px; // スマートフォン向けに余白を調整
-    }
-  }
 `;
 
-interface HexagonButtonProps {
-  $isSelected: boolean;
-}
-
-const HexagonButton = styled.button<HexagonButtonProps>`
-  width: 80px;
-  height: 92px;
-  background: ${props => props.$isSelected
-    ? 'linear-gradient(180deg, #FFEA00, #FFC107)'
-    : 'linear-gradient(180deg, #FFD700, #DAA520)'};
-  position: relative;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #333;
-  border: ${props => props.$isSelected ? '3px solid #FFF' : 'none'};
-  cursor: pointer;
-  margin: 4px;
-  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-  box-shadow: 
-    ${props => props.$isSelected
-      ? 'inset 0 0 15px rgba(255,255,255,0.8), 0 0 20px rgba(255,215,0,0.8)'
-      : 'inset 0 0 10px rgba(255,255,255,0.5), 0 5px 15px rgba(0,0,0,0.5)'};
-  text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
-
-  &:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 
-      inset 0 0 10px rgba(255,255,255,0.7), 
-      0 8px 20px rgba(0,0,0,0.7);
-  }
-
-  &:disabled {
-    background: linear-gradient(180deg, #A0A0A0, #606060);
-    cursor: not-allowed;
-    opacity: 0.7;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-  }
-`;
 
 const SelectedButtonsContainer = styled.div`
   margin-top: 20px;
   text-align: center;
 `;
 
-const SelectedButtonSpan = styled.span`
-  margin: 5px;
+const SelectedButtonSpan = styled.span<{$isEmpty: boolean}>`
   padding: 8px 12px;
-  background-color: #666;
-  border: 1px solid #FFD700;
+  background-color: ${props => props.$isEmpty ? '#444' : '#666'};
+  border: 1px solid ${props => props.$isEmpty ? '#555' : '#FFD700'};
   border-radius: 5px;
-  color: #FFF;
+  color: ${props => props.$isEmpty ? '#888' : '#FFF'};
   font-size: 1.2em;
   display: inline-block;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  min-width: 40px;
+  text-align: center;
+  
+  ${props => props.$isEmpty && `
+    background: repeating-linear-gradient(
+      90deg,
+      #444,
+      #444 4px,
+      #555 4px,
+      #555 8px
+    );
+    animation: skeleton-loading 1.5s infinite;
+  `}
+  
+  @keyframes skeleton-loading {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
 `;
 
 const Controls = styled.div`
@@ -285,7 +264,12 @@ const Message = styled.p`
   font-weight: bold;
   color: #FFEA00;
   text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+  min-height: 1.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
+
 
 // --- メインコンポーネント ---
 
@@ -295,10 +279,16 @@ const CalculationGame: React.FC = () => {
   const [selectedButtons, setSelectedButtons] = useState<Button[]>([]);
   const [message, setMessage] = useState<string>('');
   const [isResultDisplayed, setIsResultDisplayed] = useState<boolean>(false); // 計算結果表示中フラグ
+  const [gameMode, setGameMode] = useState<GameMode>('easy'); // ゲームモードの状態
 
   useEffect(() => {
     resetGame();
   }, []);
+  
+  // ゲームモードが変更されたときにゲームをリセット
+  useEffect(() => {
+    resetGame();
+  }, [gameMode]);
 
   // 選択されたボタンが3つになったら自動的に計算を実行
   useEffect(() => {
@@ -309,7 +299,7 @@ const CalculationGame: React.FC = () => {
   }, [selectedButtons, isResultDisplayed]);
 
   const resetGame = () => {
-    const { buttons: newButtons, targetNumber: newTarget } = generateSolvableGame();
+    const { buttons: newButtons, targetNumber: newTarget } = generateSolvableGame(gameMode);
     setButtons(newButtons);
     setTargetNumber(newTarget);
     setSelectedButtons([]);
@@ -374,6 +364,17 @@ const CalculationGame: React.FC = () => {
     <>
       <GlobalStyle />
       <GameContainer>
+        <ModeButtonContainer>
+          {(['easy', 'normal', 'hard'] as GameMode[]).map((mode) => (
+            <ModeButton 
+              key={mode}
+              mode={mode}
+              isActive={gameMode === mode}
+              onClick={setGameMode}
+            />
+          ))}
+        </ModeButtonContainer>
+        
         <TargetNumber>Target: <strong>{targetNumber}</strong></TargetNumber>
 
         <ButtonGrid>
@@ -388,12 +389,11 @@ const CalculationGame: React.FC = () => {
                 return (
                   <HexagonButton
                     key={button.id}
-                    onClick={() => handleButtonClick(button)}
-                    disabled={isDisabled} // ここを修正
-                    $isSelected={isSelected}
-                  >
-                    {button.operator}{button.value}
-                  </HexagonButton>
+                    button={button}
+                    isSelected={isSelected}
+                    isDisabled={isDisabled}
+                    onClick={handleButtonClick}
+                  />
                 );
               })}
             </PyramidRow>
@@ -401,13 +401,19 @@ const CalculationGame: React.FC = () => {
         </ButtonGrid>
 
         <SelectedButtonsContainer>
-          {
-            selectedButtons.map((button, index) => (
-              <SelectedButtonSpan key={button.id}>
-                {index === 0 ? '' : button.operator}{button.value}
+          {Array.from({ length: 3 }, (_, index) => {
+            const button = selectedButtons[index];
+            const isEmpty = !button;
+            
+            return (
+              <SelectedButtonSpan key={index} $isEmpty={isEmpty}>
+                {isEmpty 
+                  ? '?' 
+                  : `${index === 0 ? '' : button.operator}${button.value}`
+                }
               </SelectedButtonSpan>
-            ))
-          }
+            );
+          })}
         </SelectedButtonsContainer>
 
         <Controls>
@@ -416,7 +422,7 @@ const CalculationGame: React.FC = () => {
           </ActionButton>
         </Controls>
 
-        {message && <Message>{message}</Message>}
+        <Message>{message || '\u00A0'}</Message>
       </GameContainer>
     </>
   );

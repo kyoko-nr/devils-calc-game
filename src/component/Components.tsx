@@ -88,7 +88,7 @@ const GlobalStyle = createGlobalStyle`
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    overflow: hidden;
+    overflow: auto;
 
     @media (max-width: 768px) { // タブレット・スマートフォン向け
       font-size: 14px; // 全体のベースフォントサイズを少し小さく

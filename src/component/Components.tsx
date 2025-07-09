@@ -5,8 +5,6 @@ import { HexagonButton, type Button } from './HexagonButton';
 import { ModeButton, ModeButtonContainer, type GameMode } from './ModeButton';
 
 
-const operators = ['+', '-', '×', '÷'];
-
 // モード別の設定
 const MODE_CONFIG = {
   easy: {

@@ -50,28 +50,62 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
 
   const remainingButtons: Button[] = [];
   let currentTwoDigitCount = solvableButtons.filter(btn => btn.value >= 10).length;
+  const existingCombinations = new Map<string, number>();
+  
+  // 既存のボタンの組み合わせを記録
+  solvableButtons.forEach(btn => {
+    const combination = `${btn.operator}${btn.value}`;
+    existingCombinations.set(combination, (existingCombinations.get(combination) || 0) + 1);
+  });
 
   for (let i = 3; i < 10; i++) {
     let value: number;
+    let operator: string;
+    let attempts = 0;
     const config = MODE_CONFIG[mode];
+    const availableOperators = MODE_CONFIG[mode].operators;
     
-    if (!config.numberRanges.useTwoDigit) {
-      // 1桁の数字のみを使用
-      value = generateNumber(false, config.numberRanges.doubleDigit.max);
-    } else {
-      const needsTwoDigit = 5 - currentTwoDigitCount;
-      const remainingSlots = 10 - i;
-
-      if (needsTwoDigit > 0 && Math.random() < (needsTwoDigit / remainingSlots)) {
-          value = generateNumber(true, config.numberRanges.doubleDigit.max);
-          currentTwoDigitCount++;
+    // 重複が2つ未満の組み合わせが見つかるまで繰り返し
+    do {
+      if (!config.numberRanges.useTwoDigit) {
+        // 1桁の数字のみを使用
+        value = generateNumber(false, config.numberRanges.doubleDigit.max);
       } else {
-          value = generateNumber(false, config.numberRanges.doubleDigit.max);
+        const needsTwoDigit = 5 - currentTwoDigitCount;
+        const remainingSlots = 10 - i;
+
+        if (needsTwoDigit > 0 && Math.random() < (needsTwoDigit / remainingSlots)) {
+            value = generateNumber(true, config.numberRanges.doubleDigit.max);
+            currentTwoDigitCount++;
+        } else {
+            value = generateNumber(false, config.numberRanges.doubleDigit.max);
+        }
+      }
+
+      operator = availableOperators[Math.floor(Math.random() * availableOperators.length)];
+      attempts++;
+    } while ((existingCombinations.get(`${operator}${value}`) || 0) >= 2 && attempts < 10);
+    
+    // 重複が2つ以上の場合は、2つ未満の組み合わせを探す
+    if ((existingCombinations.get(`${operator}${value}`) || 0) >= 2) {
+      // 利用可能な数字から2つ未満の組み合わせを探す
+      const maxValue = config.numberRanges.useTwoDigit ? config.numberRanges.doubleDigit.max : 9;
+      let found = false;
+      for (let testValue = 1; testValue <= maxValue && !found; testValue++) {
+        for (const testOperator of availableOperators) {
+          const combination = `${testOperator}${testValue}`;
+          if ((existingCombinations.get(combination) || 0) < 2) {
+            value = testValue;
+            operator = testOperator;
+            found = true;
+            break;
+          }
+        }
       }
     }
-
-    const availableOperators = MODE_CONFIG[mode].operators;
-    const operator = availableOperators[Math.floor(Math.random() * availableOperators.length)];
+    
+    const combination = `${operator}${value}`;
+    existingCombinations.set(combination, (existingCombinations.get(combination) || 0) + 1);
     remainingButtons.push({ id: i, value, operator });
   }
 

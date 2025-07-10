@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
 import { HexagonButton, type Button } from './HexagonButton';
-import { ModeButton, ModeButtonContainer } from './ModeButton';
+import { ModeSelect } from './ModeSelect';
 import { calculate, generateNumber } from './logics';
 import { MODE_CONFIG, type GameMode } from './consts';
+import HelpModal from './HelpModal';
 
 // 正解が必ず存在するボタンとターゲットナンバーを生成する関数
 const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber: number } => {
@@ -15,14 +16,15 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
   while (solvableButtons.length < 3 && attempts < 1000) {
     attempts++;
 
-    // easy, normalモードでは1桁の数字のみを使用
-    const valIsTwoDigit1 = mode === 'hard' && Math.random() < 0.5;
-    const valIsTwoDigit2 = mode === 'hard' && Math.random() < 0.5;
-    const valIsTwoDigit3 = mode === 'hard' && Math.random() < 0.5;
+    // モードに応じて数字生成の設定を取得
+    const config = MODE_CONFIG[mode];
+    const valIsTwoDigit1 = config.numberRanges.useTwoDigit && Math.random() < (config.numberRanges.twoDigitProbability || 0.5);
+    const valIsTwoDigit2 = config.numberRanges.useTwoDigit && Math.random() < (config.numberRanges.twoDigitProbability || 0.5);
+    const valIsTwoDigit3 = config.numberRanges.useTwoDigit && Math.random() < (config.numberRanges.twoDigitProbability || 0.5);
 
-    const value1 = generateNumber(valIsTwoDigit1);
-    const value2 = generateNumber(valIsTwoDigit2);
-    const value3 = generateNumber(valIsTwoDigit3);
+    const value1 = generateNumber(valIsTwoDigit1, config.numberRanges.doubleDigit.max);
+    const value2 = generateNumber(valIsTwoDigit2, config.numberRanges.doubleDigit.max);
+    const value3 = generateNumber(valIsTwoDigit3, config.numberRanges.doubleDigit.max);
 
     const availableOperators = MODE_CONFIG[mode].operators;
     const op1 = availableOperators[Math.floor(Math.random() * availableOperators.length)];
@@ -35,7 +37,7 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
       result = calculate(firstCalcResult, op2, value3);
     }
 
-    if (result !== null && Number.isInteger(result) && result > 0 && result < MODE_CONFIG[mode].targetMaxValue) {
+    if (result !== null && Number.isInteger(result) && result >= MODE_CONFIG[mode].targetMinValue && result <= MODE_CONFIG[mode].targetMaxValue) {
       solvableButtons = [
         { id: 0, value: value1, operator: '+' },
         { id: 1, value: value2, operator: op1 },
@@ -50,19 +52,20 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
 
   for (let i = 3; i < 10; i++) {
     let value: number;
+    const config = MODE_CONFIG[mode];
     
-    if (mode === 'easy' || mode === 'normal') {
-      // easy, normalモードでは1桁の数字のみを使用
-      value = generateNumber(false);
+    if (!config.numberRanges.useTwoDigit) {
+      // 1桁の数字のみを使用
+      value = generateNumber(false, config.numberRanges.doubleDigit.max);
     } else {
       const needsTwoDigit = 5 - currentTwoDigitCount;
       const remainingSlots = 10 - i;
 
       if (needsTwoDigit > 0 && Math.random() < (needsTwoDigit / remainingSlots)) {
-          value = generateNumber(true);
+          value = generateNumber(true, config.numberRanges.doubleDigit.max);
           currentTwoDigitCount++;
       } else {
-          value = generateNumber(false);
+          value = generateNumber(false, config.numberRanges.doubleDigit.max);
       }
     }
 
@@ -89,13 +92,7 @@ const GlobalStyle = createGlobalStyle`
     min-height: 100vh;
     margin: 0;
     overflow: auto;
-
-    @media (max-width: 768px) { // タブレット・スマートフォン向け
-      font-size: 14px; // 全体のベースフォントサイズを少し小さく
-    }
-    @media (max-width: 480px) { // スマートフォン向け
-      font-size: 12px;
-    }
+    font-size: 16px;
   }
 `;
 
@@ -111,6 +108,7 @@ const GameContainer = styled.div`
   border: 2px solid #555;
   max-width: 600px;
   margin: auto;
+  position: relative;
 
   @media (max-width: 768px) {
     padding: 15px;
@@ -120,6 +118,34 @@ const GameContainer = styled.div`
     padding: 10px;
     gap: 10px;
     max-width: 95%; // スマートフォンで横幅いっぱいに広げる
+  }
+`;
+
+const HelpButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #666, #444);
+  border: 2px solid #555;
+  color: #EEE;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  
+  &:hover {
+    background: linear-gradient(180deg, #FFD700, #DAA520);
+    color: #333;
+    border-color: #FFD700;
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
@@ -243,6 +269,7 @@ const CalculationGame: React.FC = () => {
   const [message, setMessage] = useState<string>('');
   const [isResultDisplayed, setIsResultDisplayed] = useState<boolean>(false); // 計算結果表示中フラグ
   const [gameMode, setGameMode] = useState<GameMode>('easy'); // ゲームモードの状態
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false); // ヘルプモーダルの状態
 
   useEffect(() => {
     resetGame();
@@ -327,16 +354,14 @@ const CalculationGame: React.FC = () => {
     <>
       <GlobalStyle />
       <GameContainer>
-        <ModeButtonContainer>
-          {(['easy', 'normal', 'hard'] as GameMode[]).map((mode) => (
-            <ModeButton 
-              key={mode}
-              mode={mode}
-              isActive={gameMode === mode}
-              onClick={setGameMode}
-            />
-          ))}
-        </ModeButtonContainer>
+        <HelpButton onClick={() => setIsHelpModalOpen(true)}>
+          ?
+        </HelpButton>
+        
+        <ModeSelect 
+          currentMode={gameMode}
+          onChange={setGameMode}
+        />
         
         <TargetNumber>Target: <strong>{targetNumber}</strong></TargetNumber>
 
@@ -387,6 +412,11 @@ const CalculationGame: React.FC = () => {
 
         <Message>{message || '\u00A0'}</Message>
       </GameContainer>
+      
+      <HelpModal 
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
     </>
   );
 };

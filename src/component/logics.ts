@@ -16,10 +16,10 @@ export const calculate = (num1: number, operator: string, num2: number): number 
   }
 };
 
-// 1桁または2桁の数字を生成するヘルパー関数 (最大20まで)
-export const generateNumber = (isTwoDigit: boolean): number => {
+// 1桁または2桁の数字を生成するヘルパー関数
+export const generateNumber = (isTwoDigit: boolean, maxTwoDigit: number = 20): number => {
   if (isTwoDigit) {
-    return Math.floor(Math.random() * 11) + 10; // 10〜20
+    return Math.floor(Math.random() * (maxTwoDigit - 9)) + 10; // 10〜maxTwoDigit
   } else {
     return Math.floor(Math.random() * 9) + 1; // 1〜9
   }

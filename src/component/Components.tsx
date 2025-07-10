@@ -6,6 +6,7 @@ import { ModeSelect } from './ModeSelect';
 import { calculate, generateNumber } from './logics';
 import { MODE_CONFIG, type GameMode } from './consts';
 import HelpModal from './HelpModal';
+import ColorModeSelector, { type ColorMode, type ColorTheme, COLOR_THEMES } from './ColorModeSelector';
 
 // 正解が必ず存在するボタンとターゲットナンバーを生成する関数
 const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber: number } => {
@@ -81,10 +82,10 @@ const generateSolvableGame = (mode: GameMode): { buttons: Button[]; targetNumber
 
 // --- Styled Components の定義 ---
 
-const GlobalStyle = createGlobalStyle`
+const GlobalStyle = createGlobalStyle<{ $theme: ColorTheme }>`
   body {
-    background-color: #333;
-    color: #eee;
+    background-color: ${props => props.$theme.background};
+    color: ${props => props.$theme.text};
     font-family: 'Arial', sans-serif;
     display: flex;
     justify-content: center;
@@ -96,16 +97,16 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const GameContainer = styled.div`
+const GameContainer = styled.div<{ $theme: ColorTheme }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
   padding: 20px;
-  background-color: #444;
+  background-color: ${props => props.$theme.buttonBg};
   border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  border: 2px solid #555;
+  border: 2px solid ${props => props.$theme.buttonBorder};
   max-width: 600px;
   margin: auto;
   position: relative;
@@ -121,16 +122,16 @@ const GameContainer = styled.div`
   }
 `;
 
-const HelpButton = styled.button`
+const HelpButton = styled.button<{ $theme: ColorTheme }>`
   position: absolute;
   top: 20px;
   right: 20px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #666, #444);
-  border: 2px solid #555;
-  color: #EEE;
+  background: linear-gradient(180deg, ${props => props.$theme.buttonBg}, ${props => props.$theme.buttonBorder});
+  border: 2px solid ${props => props.$theme.buttonBorder};
+  color: ${props => props.$theme.text};
   font-size: 1.2em;
   font-weight: bold;
   cursor: pointer;
@@ -138,9 +139,9 @@ const HelpButton = styled.button`
   padding: 0;
   
   &:hover {
-    background: linear-gradient(180deg, #FFD700, #DAA520);
-    color: #333;
-    border-color: #FFD700;
+    background: linear-gradient(180deg, ${props => props.$theme.primary}, ${props => props.$theme.secondary});
+    color: ${props => props.$theme.background};
+    border-color: ${props => props.$theme.primary};
     transform: scale(1.1);
   }
   
@@ -184,14 +185,16 @@ const PyramidRow = styled.div`
 const SelectedButtonsContainer = styled.div`
   margin-top: 20px;
   text-align: center;
+  display: flex;
+  gap: 6px;
 `;
 
-const SelectedButtonSpan = styled.span<{$isEmpty: boolean}>`
+const SelectedButtonSpan = styled.span<{$isEmpty: boolean; $theme: ColorTheme}>`
   padding: 8px 12px;
-  background-color: ${props => props.$isEmpty ? '#444' : '#666'};
-  border: 1px solid ${props => props.$isEmpty ? '#555' : '#FFD700'};
+  background-color: ${props => props.$isEmpty ? props.$theme.buttonBorder : props.$theme.buttonBg};
+  border: 1px solid ${props => props.$isEmpty ? props.$theme.buttonBorder : props.$theme.primary};
   border-radius: 5px;
-  color: ${props => props.$isEmpty ? '#888' : '#FFF'};
+  color: ${props => props.$isEmpty ? props.$theme.text + '88' : props.$theme.text};
   font-size: 1.2em;
   display: inline-block;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -201,10 +204,10 @@ const SelectedButtonSpan = styled.span<{$isEmpty: boolean}>`
   ${props => props.$isEmpty && `
     background: repeating-linear-gradient(
       90deg,
-      #444,
-      #444 4px,
-      #555 4px,
-      #555 8px
+      ${props.$theme.buttonBorder},
+      ${props.$theme.buttonBorder} 4px,
+      ${props.$theme.buttonBg} 4px,
+      ${props.$theme.buttonBg} 8px
     );
     animation: skeleton-loading 1.5s infinite;
   `}
@@ -222,12 +225,12 @@ const Controls = styled.div`
   gap: 15px;
 `;
 
-const ActionButton = styled.button`
+const ActionButton = styled.button<{ $theme: ColorTheme }>`
   padding: 12px 25px;
   font-size: 1.2em;
   font-weight: bold;
-  color: #333;
-  background: linear-gradient(180deg, #FFC107, #FFA000);
+  color: ${props => props.$theme.background};
+  background: linear-gradient(180deg, ${props => props.$theme.primary}, ${props => props.$theme.secondary});
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -247,12 +250,11 @@ const ActionButton = styled.button`
   }
 `;
 
-const Message = styled.p`
+const Message = styled.p<{ $theme: ColorTheme }>`
   margin-top: 25px;
   font-size: 1.4em;
   font-weight: bold;
-  color: #FFEA00;
-  text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+  color: ${props => props.$theme.accent};
   min-height: 1.4em;
   display: flex;
   align-items: center;
@@ -270,6 +272,9 @@ const CalculationGame: React.FC = () => {
   const [isResultDisplayed, setIsResultDisplayed] = useState<boolean>(false); // 計算結果表示中フラグ
   const [gameMode, setGameMode] = useState<GameMode>('easy'); // ゲームモードの状態
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false); // ヘルプモーダルの状態
+  const [colorMode, setColorMode] = useState<ColorMode>('yellow'); // カラーモードの状態
+  
+  const currentTheme = COLOR_THEMES[colorMode];
 
   useEffect(() => {
     resetGame();
@@ -352,15 +357,21 @@ const CalculationGame: React.FC = () => {
 
   return (
     <>
-      <GlobalStyle />
-      <GameContainer>
-        <HelpButton onClick={() => setIsHelpModalOpen(true)}>
+      <GlobalStyle $theme={currentTheme} />
+      <GameContainer $theme={currentTheme}>
+        <ColorModeSelector 
+          currentMode={colorMode}
+          onChange={setColorMode}
+        />
+        
+        <HelpButton onClick={() => setIsHelpModalOpen(true)} $theme={currentTheme}>
           ?
         </HelpButton>
         
         <ModeSelect 
           currentMode={gameMode}
           onChange={setGameMode}
+          theme={currentTheme}
         />
         
         <TargetNumber>Target: <strong>{targetNumber}</strong></TargetNumber>
@@ -381,6 +392,7 @@ const CalculationGame: React.FC = () => {
                     isSelected={isSelected}
                     isDisabled={isDisabled}
                     onClick={handleButtonClick}
+                    theme={currentTheme}
                   />
                 );
               })}
@@ -394,7 +406,7 @@ const CalculationGame: React.FC = () => {
             const isEmpty = !button;
             
             return (
-              <SelectedButtonSpan key={index} $isEmpty={isEmpty}>
+              <SelectedButtonSpan key={index} $isEmpty={isEmpty} $theme={currentTheme}>
                 {isEmpty 
                   ? '?' 
                   : `${index === 0 ? '' : button.operator}${button.value}`
@@ -405,12 +417,12 @@ const CalculationGame: React.FC = () => {
         </SelectedButtonsContainer>
 
         <Controls>
-          <ActionButton onClick={resetGame}>
+          <ActionButton onClick={resetGame} $theme={currentTheme}>
             Reset
           </ActionButton>
         </Controls>
 
-        <Message>{message || '\u00A0'}</Message>
+        <Message $theme={currentTheme}>{message || '\u00A0'}</Message>
       </GameContainer>
       
       <HelpModal 

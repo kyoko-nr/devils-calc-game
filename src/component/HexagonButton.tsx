@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { type ColorTheme } from './ColorModeSelector';
 
 // ボタンの型定義
 interface Button {
@@ -13,17 +14,19 @@ interface HexagonButtonProps {
   isSelected: boolean;
   isDisabled: boolean;
   onClick: (button: Button) => void;
+  theme: ColorTheme;
 }
 
 interface StyledHexagonButtonProps {
   $isSelected: boolean;
+  $theme: ColorTheme;
 }
 
 const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
   margin: 0 1px;
   width: 86px;
   height: 98px;
-  background: ${props => props.$isSelected ? '#CC5500' : 'transparent'};
+  background: ${props => props.$isSelected ? props.$theme.hexagonSelectedBorder : 'transparent'};
   position: relative;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
@@ -45,8 +48,8 @@ const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
     width: ${props => props.$isSelected ? 'calc(100% - 6px)' : '100%'};
     height: ${props => props.$isSelected ? 'calc(100% - 6px)' : '100%'};
     background: ${props => props.$isSelected
-      ? 'linear-gradient(180deg, #FFEA00, #FFC107)'
-      : 'linear-gradient(180deg, #FFD700, #DAA520)'};
+      ? `linear-gradient(180deg, ${props.$theme.hexagonSelected}, ${props.$theme.hexagonSecondary})`
+      : `linear-gradient(180deg, ${props.$theme.hexagonPrimary}, ${props.$theme.hexagonSecondary})`};
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     transition: all 0.2s ease;
     z-index: -1;
@@ -54,8 +57,8 @@ const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
 
   &:hover:not(:disabled)::after {
     background: ${props => props.$isSelected
-      ? 'linear-gradient(180deg, #E6D000, #E6B000)'
-      : 'linear-gradient(180deg, #E6C000, #C19A00)'};
+      ? `linear-gradient(180deg, ${props.$theme.hexagonSelected}dd, ${props.$theme.hexagonSecondary}dd)`
+      : `linear-gradient(180deg, ${props.$theme.hexagonPrimary}dd, ${props.$theme.hexagonSecondary}dd)`};
   }
 
   &:disabled {
@@ -74,13 +77,15 @@ export const HexagonButton: React.FC<HexagonButtonProps> = ({
   button, 
   isSelected, 
   isDisabled, 
-  onClick 
+  onClick,
+  theme
 }) => {
   return (
     <StyledHexagonButton
       onClick={() => onClick(button)}
       disabled={isDisabled}
       $isSelected={isSelected}
+      $theme={theme}
     >
       {button.operator}{button.value}
     </StyledHexagonButton>

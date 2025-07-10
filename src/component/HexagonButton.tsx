@@ -20,11 +20,10 @@ interface StyledHexagonButtonProps {
 }
 
 const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
-  width: 80px;
-  height: 92px;
-  background: ${props => props.$isSelected
-    ? 'linear-gradient(180deg, #FFEA00, #FFC107)'
-    : 'linear-gradient(180deg, #FFD700, #DAA520)'};
+  margin: 0 1px;
+  width: 86px;
+  height: 98px;
+  background: ${props => props.$isSelected ? '#CC5500' : 'transparent'};
   position: relative;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
@@ -34,25 +33,40 @@ const StyledHexagonButton = styled.button<StyledHexagonButtonProps>`
   font-weight: bold;
   color: #333;
   cursor: pointer;
-  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-  box-shadow: 
-    ${props => props.$isSelected
-      ? 'inset 0 0 15px rgba(255,255,255,0.8), 0 0 20px rgba(255,215,0,0.8)'
-      : 'inset 0 0 10px rgba(255,255,255,0.5), 0 5px 15px rgba(0,0,0,0.5)'};
+  transition: all 0.2s ease;
   text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+  border: none;
 
-  &:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 
-      inset 0 0 10px rgba(255,255,255,0.7), 
-      0 8px 20px rgba(0,0,0,0.7);
+  &::after {
+    content: '';
+    position: absolute;
+    top: ${props => props.$isSelected ? '3px' : '0'};
+    left: ${props => props.$isSelected ? '3px' : '0'};
+    width: ${props => props.$isSelected ? 'calc(100% - 6px)' : '100%'};
+    height: ${props => props.$isSelected ? 'calc(100% - 6px)' : '100%'};
+    background: ${props => props.$isSelected
+      ? 'linear-gradient(180deg, #FFEA00, #FFC107)'
+      : 'linear-gradient(180deg, #FFD700, #DAA520)'};
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    transition: all 0.2s ease;
+    z-index: -1;
+  }
+
+  &:hover:not(:disabled)::after {
+    background: ${props => props.$isSelected
+      ? 'linear-gradient(180deg, #E6D000, #E6B000)'
+      : 'linear-gradient(180deg, #E6C000, #C19A00)'};
   }
 
   &:disabled {
-    background: linear-gradient(180deg, #A0A0A0, #606060);
+    background: ${props => props.$isSelected ? '#999' : 'transparent'};
     cursor: not-allowed;
     opacity: 0.7;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    
+    &::after {
+      background: linear-gradient(180deg, #A0A0A0, #606060);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
   }
 `;
 
